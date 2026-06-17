@@ -72,10 +72,11 @@ Every request sent to the Hub must follow a strict unified JSON structure. Here 
 | `provider_code` | String | Target external provider code configured in the Hub (e.g., `"EDAAT"`). |
 | `end_point` | String | The specific provider URI path you are calling (e.g., `"/api/v1/Invoices/SingleWithClient"`). |
 | `http_method` | String | The HTTP method to use for the external call (e.g., `"POST"`, `"GET"`, `"PUT"`). |
-| `request_details` | Object | Container for all HTTP parameters and body payload. |
-| `request_details.headers` | Array | Custom HTTP headers to pass to the provider. (Do NOT include Auth headers, the Hub handles this). |
-| `request_details.query_params`| Array | URL Query parameters. Example: `[{"name": "id", "value": "123"}]`. |
-| `request_details.body` | Object | The exact JSON body structure expected by the external provider. |
+| `request_details` | Array | Array of request detail objects. |
+| `request_details[].internal_code` | String | Caller provided internal reference code. |
+| `request_details[].headers` | Array | Custom HTTP headers to pass to the provider. (Do NOT include Auth headers, the Hub handles this). |
+| `request_details[].query_params`| Array | URL Query parameters. Example: `[{"name": "id", "value": "123"}]`. |
+| `request_details[].body` | Object | The exact JSON body structure expected by the external provider. |
 
 ---
 
@@ -94,42 +95,38 @@ In a **SYNC** flow, your PL/SQL session waits until the Hub has contacted the ex
   "provider_code": "EDAAT",
   "end_point": "/api/v1/Invoices/SingleWithClient",
   "http_method": "POST",
-  "request_details": {
-    "headers": [{"name": "Content-Type", "value": "application/json", "seq": 1}],
-    "query_params": [],
-    "body": {
-      "IsClientEnterpise": false,
-      "NationalId": "213584745789654",
-      "InternalCode": "AQAREK#85265489",
-      "IssueDate": "2026-06-15",
-      "DueDate": "2026-06-15",
-      "TotalAmount": 12500,
-      "Products": [
-        {
-          "ProductId": 10001,
-          "Price": 12500,
-          "Qty": 1
-        }
-      ],
-      "ExportToSadad": true,
-      "HasValidityPeriod": true,
-      "FromDurationTime": "00:00",
-      "ToDurationTime": "18:00",
-      "ExpiryDate": "2026-12-31"
+  "request_details": [
+    {
+      "internal_code": "AQAREK#85265489",
+      "headers": [{"name": "Content-Type", "value": "application/json", "seq": 1}],
+      "query_params": [],
+      "body": {
+        "IsClientEnterpise": false,
+        "NationalId": "213584745789654",
+        "InternalCode": "AQAREK#85265489",
+        "IssueDate": "2026-06-15",
+        "DueDate": "2026-06-15",
+        "TotalAmount": 12500,
+        "Products": [
+          {
+            "ProductId": 10001,
+            "Price": 12500,
+            "Qty": 1
+          }
+        ],
+        "ExportToSadad": true,
+        "HasValidityPeriod": true,
+        "FromDurationTime": "00:00",
+        "ToDurationTime": "18:00",
+        "ExpiryDate": "2026-12-31"
+      }
     }
-  }
+  ]
 }
 ```
 
 **Response Example:**
 The response will be the direct JSON response from the provider. 
-
-**Note:** The Hub tracking ID is returned in the HTTP Headers as `X-Transaction-UUID`, not in the JSON body.
-
-*HTTP Response Headers:*
-```http
-X-Transaction-UUID: F47AC10B58CC4372A5670E02B2C3D479
-```
 
 *JSON Response Body:*
 ```json
@@ -152,39 +149,71 @@ In an **ASYNC** flow, the Hub validates the payload, generates a tracking ID, an
   "provider_code": "EDAAT",
   "end_point": "/api/v1/Invoices/SingleWithClient",
   "http_method": "POST",
-  "request_details": {
-    "headers": [{"name": "Content-Type", "value": "application/json", "seq": 1}],
-    "query_params": [],
-    "body": {
-      "IsClientEnterpise": false,
-      "NationalId": "213584745789654",
-      "InternalCode": "AQAREK#85265489",
-      "IssueDate": "2026-06-15",
-      "DueDate": "2026-06-15",
-      "TotalAmount": 12500,
-      "Products": [
-        {
-          "ProductId": 10001,
-          "Price": 12500,
-          "Qty": 1
-        }
-      ],
-      "ExportToSadad": true,
-      "HasValidityPeriod": true,
-      "FromDurationTime": "00:00",
-      "ToDurationTime": "18:00",
-      "ExpiryDate": "2026-12-31"
+  "request_details": [
+    {
+      "internal_code": "AQAREK#85265489",
+      "headers": [{"name": "Content-Type", "value": "application/json", "seq": 1}],
+      "query_params": [],
+      "body": {
+        "IsClientEnterpise": false,
+        "NationalId": "213584745789654",
+        "InternalCode": "AQAREK#85265489",
+        "IssueDate": "2026-06-15",
+        "DueDate": "2026-06-15",
+        "TotalAmount": 12500,
+        "Products": [
+          {
+            "ProductId": 10001,
+            "Price": 12500,
+            "Qty": 1
+          }
+        ],
+        "ExportToSadad": true,
+        "HasValidityPeriod": true,
+        "FromDurationTime": "00:00",
+        "ToDurationTime": "18:00",
+        "ExpiryDate": "2026-12-31"
+      }
     }
-  }
+  ]
 }
 ```
 
 **Response Example:**
-The Hub returns an acknowledgment immediately. You will use the `transaction_uuid` to track the status later (or rely on a Webhook callback from the Hub).
+The Hub returns an acknowledgment immediately with the tracking UUIDs for each request detail object. You will use the `transactionUuid` to track the status later.
+```json
+[
+  {
+    "internal_code": "AQAREK#85265489",
+    "transactionUuid": "A1B2C3D4E5F678901234567890ABCDEF",
+    "status": "QUEUED"
+  }
+]
+```
+
+### 3. Check Transaction Status API
+
+This endpoint retrieves the status of a specific integration transaction by its tracking UUID. It is useful for tracking the status of **ASYNC** flows.
+
+**Endpoint:** 
+`GET /hub/runtime/transactionStatus/{uuid}`
+
+**Path Parameters:**
+- `uuid`: The `transactionUuid` returned in the ASYNC flow acknowledgment.
+
+**Response Example:**
 ```json
 {
-  "status": "Accepted",
-  "message": "Request queued for background processing.",
-  "transaction_uuid": "A1B2C3D4E5F678901234567890ABCDEF"
+  "transaction_uuid": "A1B2C3D4E5F678901234567890ABCDEF",
+  "flow_type": "ASYNC",
+  "status": "COMPLETED",
+  "end_point": "/api/v1/Invoices/SingleWithClient",
+  "request_payload": { ... },
+  "response_payload": { ... },
+  "http_status_code": 200,
+  "error_message": null,
+  "created_at": "2026-06-17T12:00:00Z",
+  "completed_at": "2026-06-17T12:00:05Z",
+  "notification_sent": "Y"
 }
 ```
