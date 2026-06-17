@@ -217,3 +217,29 @@ This endpoint retrieves the status of a specific integration transaction by its 
   "notification_sent": "Y"
 }
 ```
+
+### 4. Asynchronous (ASYNC) Callback / Webhook
+
+When an **ASYNC** request finishes processing (either successfully or with an error), the Hub will push a notification to the `callback_url` registered for your system's environment.
+
+**Method:** `POST`
+**Content-Type:** `application/json`
+
+**Callback JSON Payload Example:**
+The payload is a JSON array containing the execution results of your asynchronous requests.
+
+```json
+[
+  {
+    "internal_code": "AQAREK#85265489",
+    "transactionUuid": "A1B2C3D4E5F678901234567890ABCDEF",
+    "status": "COMPLETED",
+    "httpStatusCode": 200,
+    "responsePayload": {
+      "status": "Success",
+      "invoiceNo": "INV-85265489"
+    },
+    "errorMessage": null
+  }
+]
+```
