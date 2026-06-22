@@ -88,7 +88,7 @@ CREATE OR REPLACE PACKAGE BODY hub_client_sdk_pkg AS
         l_token         VARCHAR2(32767);
     BEGIN
         -- Generate Auth Header (Encoded Credentials)
-        l_auth_header := utl_raw.cast_to_varchar2(utl_encode.base64_encode(utl_raw.cast_to_raw(p_client_id || ':' || p_client_secret)));
+        l_auth_header := REGEXP_REPLACE(utl_raw.cast_to_varchar2(utl_encode.base64_encode(utl_raw.cast_to_raw(p_client_id || ':' || p_client_secret))), '[[:space:]]', '');
 
         -- Clear any existing headers from previous calls
         apex_web_service.g_request_headers.delete;
