@@ -7,7 +7,7 @@ CREATE OR REPLACE PACKAGE hub_client_sdk_pkg AUTHID CURRENT_USER AS
      */
 
     -- Global Configuration Constants
-    c_system_code CONSTANT VARCHAR2(100) := 'AQAREK';
+    c_system_code CONSTANT VARCHAR2(100) := 'YOUR_SYSTEM_CODE';
     c_env_type    CONSTANT VARCHAR2(10)  := 'TEST';
 
     /**
@@ -20,7 +20,7 @@ CREATE OR REPLACE PACKAGE hub_client_sdk_pkg AUTHID CURRENT_USER AS
      * Returns:
      *   - VARCHAR2 - Plaintext Bearer access token.
      * Pipelined Behavior:
-     *   - Encodes Client ID and Secret to Base64 for Basic Authentication.
+     *   - Encodes Client ID and Secret to Base64 for the Authorization header.
      *   - Makes a POST request to {p_hub_base_url}/hub/security/token using global constants for system/env.
      *   - Parses the JSON response to extract the token.
      * Exceptions:
@@ -87,7 +87,7 @@ CREATE OR REPLACE PACKAGE BODY hub_client_sdk_pkg AS
         l_auth_header   VARCHAR2(32767);
         l_token         VARCHAR2(32767);
     BEGIN
-        -- Generate Basic Auth Header
+        -- Generate Auth Header (Encoded Credentials)
         l_auth_header := utl_raw.cast_to_varchar2(utl_encode.base64_encode(utl_raw.cast_to_raw(p_client_id || ':' || p_client_secret)));
 
         -- Clear any existing headers from previous calls
@@ -97,8 +97,8 @@ CREATE OR REPLACE PACKAGE BODY hub_client_sdk_pkg AS
         apex_web_service.g_request_headers(1).name := 'Content-Type';
         apex_web_service.g_request_headers(1).value := 'application/json';
         apex_web_service.g_request_headers(2).name := 'Authorization';
-        apex_web_service.g_request_headers(2).value := 'Basic ' || l_auth_header;
-        apex_web_service.g_request_headers(3).name := 'system_code';
+        apex_web_service.g_request_headers(2).value := l_auth_header;
+        apex_web_service.g_request_headers(3).name := 'systemCode';
         apex_web_service.g_request_headers(3).value := c_system_code;
         apex_web_service.g_request_headers(4).name := 'environmentType';
         apex_web_service.g_request_headers(4).value := c_env_type;
