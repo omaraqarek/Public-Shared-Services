@@ -119,7 +119,7 @@ CREATE OR REPLACE PACKAGE BODY hub_client_sdk_pkg AS
         -- Check HTTP Status
         IF apex_web_service.g_status_code = 200 THEN
             l_res_json := JSON_OBJECT_T(l_response_clob);
-            l_token := l_res_json.get_string('access_token');
+            l_token := l_res_json.get_string('token');
             RETURN l_token;
         ELSE
             -- Raise application error with the response message for debugging
