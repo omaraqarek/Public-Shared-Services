@@ -17,6 +17,7 @@ CREATE OR REPLACE PACKAGE hub_client_sdk_pkg AS
      *   - p_hub_base_url:  IN VARCHAR2 (NotNull) - Base URL of the ORDS Hub (e.g., 'https://your-domain.com/ords/schema').
      *   - p_client_id:     IN VARCHAR2 (NotNull) - The registered Client ID.
      *   - p_client_secret: IN VARCHAR2 (NotNull) - The registered Client Secret.
+     *   - p_expires_in:    OUT TIMESTAMP - The SYSTIMESTAMP when the token will expire.
      * Returns:
      *   - VARCHAR2 - Plaintext Bearer access token.
      * Pipelined Behavior:
@@ -29,7 +30,8 @@ CREATE OR REPLACE PACKAGE hub_client_sdk_pkg AS
     FUNCTION get_auth_token(
         p_hub_base_url  IN VARCHAR2,
         p_client_id     IN VARCHAR2,
-        p_client_secret IN VARCHAR2
+        p_client_secret IN VARCHAR2,
+        p_expires_in    OUT TIMESTAMP
     ) RETURN VARCHAR2;
 
     /**
@@ -80,7 +82,8 @@ CREATE OR REPLACE PACKAGE BODY hub_client_sdk_pkg AS
     FUNCTION get_auth_token(
         p_hub_base_url  IN VARCHAR2,
         p_client_id     IN VARCHAR2,
-        p_client_secret IN VARCHAR2
+        p_client_secret IN VARCHAR2,
+        p_expires_in    OUT TIMESTAMP
     ) RETURN VARCHAR2 IS
         l_response_clob CLOB;
         l_res_json      JSON_OBJECT_T;
@@ -120,6 +123,7 @@ CREATE OR REPLACE PACKAGE BODY hub_client_sdk_pkg AS
         IF apex_web_service.g_status_code = 200 THEN
             l_res_json := JSON_OBJECT_T(l_response_clob);
             l_token := l_res_json.get_string('token');
+            p_expires_in := l_res_json.get_timestamp('expiresIn');
             RETURN l_token;
         ELSE
             -- Raise application error with the response message for debugging
@@ -160,8 +164,9 @@ CREATE OR REPLACE PACKAGE BODY hub_client_sdk_pkg AS
         p_client_secret IN VARCHAR2,
         p_request_json  IN CLOB
     ) RETURN CLOB IS
-        l_token    VARCHAR2(32767);
-        l_response CLOB;
+        l_token      VARCHAR2(32767);
+        l_expires_in TIMESTAMP;
+        l_response   CLOB;
     BEGIN
         -- ==============================================================================
         -- TODO: Token Caching Logic (Internal System Developer Implementation)
@@ -179,7 +184,7 @@ CREATE OR REPLACE PACKAGE BODY hub_client_sdk_pkg AS
         -- END;
         --
         -- IF l_token IS NULL THEN
-        --     l_token := get_auth_token(p_hub_base_url, p_client_id, p_client_secret);
+        --     l_token := get_auth_token(p_hub_base_url, p_client_id, p_client_secret, l_expires_in);
         --     
         --     -- Update your local tokens table here
         --     -- MERGE INTO local_hub_tokens ...
@@ -190,7 +195,8 @@ CREATE OR REPLACE PACKAGE BODY hub_client_sdk_pkg AS
         l_token := get_auth_token(
             p_hub_base_url  => p_hub_base_url,
             p_client_id     => p_client_id,
-            p_client_secret => p_client_secret
+            p_client_secret => p_client_secret,
+            p_expires_in    => l_expires_in
         );
 
         -- Execute the actual API call

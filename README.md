@@ -29,7 +29,7 @@ The Integration Hub acts as a secure proxy and payload orchestrator between inte
 
 1. Deploy the SDK package `hub_client_sdk_pkg.sql` into your internal Oracle APEX / Database environment.
 2. **(Important)** Ensure your internal environment has the necessary Oracle Wallet and ACL configurations to make outbound HTTPS requests to the Hub ORDS endpoints.
-3. Review the `execute_with_auth` function in the package body. A commented block is provided where you can integrate your own local token caching logic (e.g., storing the token in a local table) to prevent redundant authentication calls.
+3. Review the `execute_with_auth` function in the package body. A commented block is provided where you can integrate your own local token caching logic (e.g., storing the token in a local table) to prevent redundant authentication calls. The underlying `get_auth_token` function now returns `expires_in` (a `TIMESTAMP` indicating exactly when the token expires) as an `OUT` parameter, which you can use to effectively manage your local cache validity.
 
 ---
 
