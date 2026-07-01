@@ -1,0 +1,40 @@
+{
+  "system_code": "THESHARE",
+  "environment": "TEST",
+  "flow_type": "SYNC",
+  "provider_code": "EDAAT",
+  "end_point": "/v1/invoices",
+  "http_method": "POST",
+  "request_details": [
+    {
+      "internal_code": "REQ-1001",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "seq": 1
+        }
+      ],
+      "body": {
+        "IsClientEnterpise": false,
+        "NationalId": "1234567890",
+        "InternalCode": "AQAREK123",
+        "IssueDate": "2026-01-01",
+        "DueDate": "2026-01-01",
+        "TotalAmount": 10000,
+        "Products": [
+          {
+            "ProductId": 123,
+            "Price": 10000,
+            "Qty": 1
+          }
+        ],
+        "ExportToSadad": "true",
+        "HasValidityPeriod": true,
+        "FromDurationTime": "00:00",
+        "ToDurationTime": "23:59",
+        "ExpiryDate": "2027-12-31"
+      }
+    }
+  ]
+}

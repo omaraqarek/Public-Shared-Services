@@ -1,0 +1,139 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "IntegrationHubRequest",
+  "description": "JSON Schema for incoming request payloads sent by internal systems to the Integration Hub.",
+  "type": "object",
+  "required": [
+    "system_code",
+    "environment",
+    "flow_type",
+    "provider_code",
+    "end_point"
+  ],
+  "properties": {
+    "system_code": {
+      "type": "string",
+      "description": "Unique code identifying the consuming internal system (e.g., 'CRM_APP').",
+      "maxLength": 50
+    },
+    "environment": {
+      "type": "string",
+      "description": "Target deployment environment.",
+      "enum": [
+        "TEST",
+        "LIVE"
+      ]
+    },
+    "flow_type": {
+      "type": "string",
+      "description": "Execution flow type.",
+      "enum": [
+        "SYNC",
+        "ASYNC"
+      ]
+    },
+    "provider_code": {
+      "type": "string",
+      "description": "Code representing the destination provider system (e.g., 'SMS_PROV').",
+      "maxLength": 50
+    },
+    "end_point": {
+      "type": "string",
+      "description": "The target endpoint of the provider being integration-called (e.g., '/v1/messages/send').",
+      "maxLength": 1000
+    },
+    "http_method": {
+      "type": "string",
+      "description": "HTTP method to be used for the integration call.",
+      "enum": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "PATCH"
+      ]
+    },
+    "request_details": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "description": "Optional array of request details for the integration call.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "internal_code": {
+            "type": "string",
+            "description": "Caller provided internal reference code.",
+            "maxLength": 100
+          },
+          "headers": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "List of HTTP request headers to pass through to the provider.",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "value"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "HTTP Header field name (e.g., 'Content-Type')."
+                },
+                "value": {
+                  "type": "string",
+                  "description": "HTTP Header field value."
+                },
+                "seq": {
+                  "type": "integer",
+                  "description": "Sequence or order number of the header."
+                }
+              }
+            }
+          },
+          "query_params": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "List of HTTP URL query string parameters to append to the call.",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "value"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "URL query parameter name (e.g., 'limit')."
+                },
+                "value": {
+                  "type": "string",
+                  "description": "URL query parameter value."
+                }
+              }
+            }
+          },
+          "body": {
+            "type": [
+              "object",
+              "array",
+              "string",
+              "number",
+              "boolean",
+              "null"
+            ],
+            "description": "Raw payload body to pass through to the target provider."
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

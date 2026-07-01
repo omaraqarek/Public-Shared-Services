@@ -1,0 +1,31 @@
+{
+  "system_code": "THESHARE",
+  "environment": "TEST",
+  "flow_type": "SYNC",
+  "provider_code": "ELM",
+  "end_point": "api/v2/oidc/session",
+  "http_method": "GET",
+  "request_details": [
+    {
+      "internal_code": "REQ-2001",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "seq": 1
+        }
+      ],
+      "query_params": [
+        {
+          "name": "local",
+          "value": "ar"
+        },
+        {
+          "name": "requestId",
+          "value": "TEST_SHARED_SERVICES_001"
+        }
+      ],
+      "body": ""
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "system_code": "THESHARE",
+  "environment": "TEST",
+  "flow_type": "SYNC",
+  "provider_code": "UNIFONIC",
+  "end_point": "/rest/SMS/messages",
+  "http_method": "POST",
+  "request_details": [
+    {
+      "internal_code": "REQ-4001",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/x-www-form-urlencoded",
+          "seq": 1
+        }
+      ],
+      "query_params": [
+        {
+          "name": "Recipient",
+          "value": "966500000000"
+        },
+        {
+          "name": "Body",
+          "value": "Hello from THESHARE integration"
+        },
+        {
+          "name": "SenderID",
+          "value": "The Share"
+        }
+      ],
+      "body": ""
+    }
+  ]
+}

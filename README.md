@@ -69,7 +69,7 @@ Every request sent to the Hub must follow a strict unified JSON structure. Here 
 | `system_code` | String | Unique identifier for your internal system (e.g., `"AQAREK"`). Matches your Hub registration. |
 | `environment` | String | Target environment. Usually `"TEST"` or `"LIVE"`. |
 | `flow_type` | String | Execution model: `"SYNC"` (Synchronous) or `"ASYNC"` (Asynchronous). |
-| `provider_code` | String | Target external provider code configured in the Hub (e.g., `"EDAAT"`). |
+| `provider_code` | String | Target external provider code configured in the Hub (e.g., `"EDAAT"`, `"HYPER_PAY"`, `"UNIFONIC"`, `"BRANCH"`, `"ELM"`). |
 | `end_point` | String | The specific provider URI path you are calling (e.g., `"/api/v1/Invoices/SingleWithClient"`). |
 | `http_method` | String | The HTTP method to use for the external call (e.g., `"POST"`, `"GET"`, `"PUT"`). |
 | `request_details` | Array | Array of request detail objects. |
@@ -77,6 +77,19 @@ Every request sent to the Hub must follow a strict unified JSON structure. Here 
 | `request_details[].headers` | Array | Custom HTTP headers to pass to the provider. (Do NOT include Auth headers, the Hub handles this). |
 | `request_details[].query_params`| Array | URL Query parameters. Example: `[{"name": "id", "value": "123"}]`. |
 | `request_details[].body` | Object | The exact JSON body structure expected by the external provider. |
+
+---
+
+## Sample Payloads
+
+Sample JSON request templates for various supported providers have been included in this repository under the `samples/` directory:
+
+- [request_schema.json](./samples/request_schema.json): The base schema validation structure.
+- [sample_request_branch.json](./samples/sample_request_branch.json): Example for Branch provider.
+- [sample_request_edaat.json](./samples/sample_request_edaat.json): Example for Edaat provider.
+- [sample_request_elm.json](./samples/sample_request_elm.json): Example for Elm provider.
+- [sample_request_hyperpay.json](./samples/sample_request_hyperpay.json): Example for HyperPay provider.
+- [sample_request_unifonic.json](./samples/sample_request_unifonic.json): Example for Unifonic provider.
 
 ---
 

@@ -1,0 +1,34 @@
+{
+  "system_code": "THESHARE",
+  "environment": "TEST",
+  "flow_type": "SYNC",
+  "provider_code": "BRANCH",
+  "end_point": "/v1/url",
+  "http_method": "POST",
+  "request_details": [
+    {
+      "internal_code": "REQ-3001",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "seq": 1
+        }
+      ],
+      "body": {
+        "data": {
+          "$marketing_title": "Test marketing title",
+          "$ios_url": "https://apps.apple.com/sa/app/aqarek-platform/id1598882735",
+          "$android_url": "https://play.google.com/store/apps/details?id=saudi.azm.aqarek",
+          "$desktop_url": "https://aqarek.com.sa/ords/r/aqarek/aqarek-web/home",
+          "id": "1",
+          "page": "test",
+          "trackingCode": "1",
+          "isShowCode": "1",
+          "promoCode": "1",
+          "isShowPromoCode": "1"
+        }
+      }
+    }
+  ]
+}
