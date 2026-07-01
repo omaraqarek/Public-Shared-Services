@@ -1,4 +1,4 @@
-CREATE OR REPLACE PACKAGE hub_client_sdk_pkg AUTHID CURRENT_USER AS
+CREATE OR REPLACE PACKAGE hub_client_sdk_pkg AS
     /**
      * Package: hub_client_sdk_pkg
      * Purpose: Provides an SDK for internal systems to easily integrate with the Shared Services Hub.
