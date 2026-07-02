@@ -35,7 +35,41 @@ The Integration Hub acts as a secure proxy and payload orchestrator between inte
 
 ## How to Use the SDK
 
-The SDK simplifies the process by combining authentication and execution into a single call. 
+The SDK simplifies the process by combining authentication and execution into a single call. There are two ways to execute a request:
+
+### Method 1: Using the Builder Function (Recommended)
+You can dynamically construct the JSON payload and execute it directly using the `build_and_execute_request` helper function.
+
+```sql
+DECLARE
+    l_response     CLOB;
+BEGIN
+    -- Build the JSON payload and execute the request in one go
+    l_response := hub_client_sdk_pkg.build_and_execute_request(
+        p_hub_base_url  => 'https://your-ords-domain.com/ords/hub_schema',
+        p_client_id     => 'your_client_id',
+        p_client_secret => 'your_client_secret',
+        p_provider_code => 'EDAAT',
+        p_end_point     => '/api/v1/Invoices',
+        p_http_method   => 'POST',
+        p_internal_code => 'REQ-1001',
+        p_system_code   => 'AQAREK',
+        p_environment   => 'TEST',
+        p_flow_type     => 'SYNC',
+        p_headers       => hub_client_sdk_pkg.t_headers_tab(
+                             hub_client_sdk_pkg.t_header_rec(name => 'Content-Type', value => 'application/json', seq => 1)
+                           ),
+        p_query_params  => hub_client_sdk_pkg.t_query_params_tab(), -- empty if no query params
+        p_body          => '{"InvoiceAmount": 100}'
+    );
+
+    -- Process the Hub's response
+    dbms_output.put_line(l_response);
+END;
+```
+
+### Method 2: Providing the JSON Manually
+If you prefer to construct your JSON payload manually, you can use the `execute_with_auth` function directly.
 
 ```sql
 DECLARE
@@ -43,7 +77,24 @@ DECLARE
     l_response     CLOB;
 BEGIN
     -- 1. Construct your JSON payload
-    l_request_json := '{ ... }';
+    l_request_json := '{
+      "system_code": "AQAREK",
+      "environment": "TEST",
+      "flow_type": "SYNC",
+      "provider_code": "EDAAT",
+      "end_point": "/api/v1/Invoices",
+      "http_method": "POST",
+      "request_details": [
+        {
+          "internal_code": "REQ-1001",
+          "headers": [
+            { "name": "Content-Type", "value": "application/json", "seq": 1 }
+          ],
+          "query_params": [],
+          "body": {"InvoiceAmount": 100}
+        }
+      ]
+    }';
 
     -- 2. Execute via the SDK
     l_response := hub_client_sdk_pkg.execute_with_auth(

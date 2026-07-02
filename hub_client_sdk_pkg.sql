@@ -1,4 +1,19 @@
 CREATE OR REPLACE PACKAGE hub_client_sdk_pkg AS
+    
+    -- Public Types for JSON Builder
+    TYPE t_header_rec IS RECORD (
+        name  VARCHAR2(255),
+        value VARCHAR2(4000),
+        seq   NUMBER
+    );
+    TYPE t_headers_tab IS TABLE OF t_header_rec;
+
+    TYPE t_query_param_rec IS RECORD (
+        name  VARCHAR2(255),
+        value VARCHAR2(4000)
+    );
+    TYPE t_query_params_tab IS TABLE OF t_query_param_rec;
+
     /**
      * Package: hub_client_sdk_pkg
      * Purpose: Provides an SDK for internal systems to easily integrate with the Shared Services Hub.
@@ -72,6 +87,39 @@ CREATE OR REPLACE PACKAGE hub_client_sdk_pkg AS
         p_client_id     IN VARCHAR2,
         p_client_secret IN VARCHAR2,
         p_request_json  IN CLOB
+    ) RETURN CLOB;
+
+    /**
+     * Function: build_and_execute_request
+     * Purpose: Constructs the standard Hub JSON payload from relational parameters and executes the request.
+     * Parameters:
+     *   - p_system_code:   IN VARCHAR2
+     *   - p_environment:   IN VARCHAR2
+     *   - p_flow_type:     IN VARCHAR2
+     *   - p_provider_code: IN VARCHAR2
+     *   - p_end_point:     IN VARCHAR2
+     *   - p_http_method:   IN VARCHAR2
+     *   - p_internal_code: IN VARCHAR2
+     *   - p_headers:       IN hub_headers_tab
+     *   - p_query_params:  IN hub_query_params_tab
+     *   - p_body:          IN CLOB
+     * Returns:
+     *   - CLOB containing the Hub's JSON response payload
+     */
+    FUNCTION build_and_execute_request(
+        p_hub_base_url  IN VARCHAR2,
+        p_client_id     IN VARCHAR2,
+        p_client_secret IN VARCHAR2,
+        p_provider_code IN VARCHAR2,
+        p_end_point     IN VARCHAR2,
+        p_http_method   IN VARCHAR2,
+        p_internal_code IN VARCHAR2,
+        p_system_code   IN VARCHAR2 DEFAULT c_system_code,
+        p_environment   IN VARCHAR2 DEFAULT c_env_type,
+        p_flow_type     IN VARCHAR2 DEFAULT 'SYNC',
+        p_headers       IN t_headers_tab DEFAULT NULL,
+        p_query_params  IN t_query_params_tab DEFAULT NULL,
+        p_body          IN CLOB DEFAULT NULL
     ) RETURN CLOB;
 
 END hub_client_sdk_pkg;
@@ -208,6 +256,83 @@ CREATE OR REPLACE PACKAGE BODY hub_client_sdk_pkg AS
         
         RETURN l_response;
     END execute_with_auth;
+
+    FUNCTION build_and_execute_request(
+        p_hub_base_url  IN VARCHAR2,
+        p_client_id     IN VARCHAR2,
+        p_client_secret IN VARCHAR2,
+        p_provider_code IN VARCHAR2,
+        p_end_point     IN VARCHAR2,
+        p_http_method   IN VARCHAR2,
+        p_internal_code IN VARCHAR2,
+        p_system_code   IN VARCHAR2 DEFAULT c_system_code,
+        p_environment   IN VARCHAR2 DEFAULT c_env_type,
+        p_flow_type     IN VARCHAR2 DEFAULT 'SYNC',
+        p_headers       IN t_headers_tab DEFAULT NULL,
+        p_query_params  IN t_query_params_tab DEFAULT NULL,
+        p_body          IN CLOB DEFAULT NULL
+    ) RETURN CLOB IS
+        l_request          JSON_OBJECT_T := JSON_OBJECT_T();
+        l_request_json     CLOB;
+        l_details_arr      JSON_ARRAY_T  := JSON_ARRAY_T();
+        l_detail           JSON_OBJECT_T := JSON_OBJECT_T();
+        l_headers_arr      JSON_ARRAY_T  := JSON_ARRAY_T();
+        l_query_params_arr JSON_ARRAY_T  := JSON_ARRAY_T();
+        l_header           JSON_OBJECT_T;
+        l_param            JSON_OBJECT_T;
+    BEGIN
+        l_request.put('system_code', p_system_code);
+        l_request.put('environment', p_environment);
+        l_request.put('flow_type', p_flow_type);
+        l_request.put('provider_code', p_provider_code);
+        l_request.put('end_point', p_end_point);
+        l_request.put('http_method', p_http_method);
+
+        l_detail.put('internal_code', p_internal_code);
+
+        -- Build Headers
+        IF p_headers IS NOT NULL AND p_headers.COUNT > 0 THEN
+            FOR i IN 1..p_headers.COUNT LOOP
+                l_header := JSON_OBJECT_T();
+                l_header.put('name', p_headers(i).name);
+                l_header.put('value', p_headers(i).value);
+                l_header.put('seq', p_headers(i).seq);
+                l_headers_arr.append(l_header);
+            END LOOP;
+        END IF;
+        l_detail.put('headers', l_headers_arr);
+
+        -- Build Query Params
+        IF p_query_params IS NOT NULL AND p_query_params.COUNT > 0 THEN
+            FOR i IN 1..p_query_params.COUNT LOOP
+                l_param := JSON_OBJECT_T();
+                l_param.put('name', p_query_params(i).name);
+                l_param.put('value', p_query_params(i).value);
+                l_query_params_arr.append(l_param);
+            END LOOP;
+        END IF;
+        l_detail.put('query_params', l_query_params_arr);
+
+        -- Add Body
+        IF p_body IS NOT NULL THEN
+            -- Safely parse the CLOB as JSON and attach it
+            l_detail.put('body', JSON_ELEMENT_T.parse(p_body));
+        ELSE
+            l_detail.put('body', JSON_OBJECT_T());
+        END IF;
+
+        l_details_arr.append(l_detail);
+        l_request.put('request_details', l_details_arr);
+
+        l_request_json := l_request.to_clob();
+
+        RETURN execute_with_auth(
+            p_hub_base_url  => p_hub_base_url,
+            p_client_id     => p_client_id,
+            p_client_secret => p_client_secret,
+            p_request_json  => l_request_json
+        );
+    END build_and_execute_request;
 
 END hub_client_sdk_pkg;
 /
